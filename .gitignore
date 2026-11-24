@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+coverage
+.env
+.env.local
+*.log
+dump.rdb
+next-env.d.ts
+*.tsbuildinfo
+docs/demo.webm
+docs/.video-tmp
+docs/demo-failure.png
