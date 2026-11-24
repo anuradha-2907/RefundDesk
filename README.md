@@ -147,6 +147,15 @@ See [`.env.example`](.env.example). Key variables: `MONGODB_URI` (must be a repl
 | Redis | Upstash or Redis Cloud |
 | Web | Vercel (root `frontend`, env `NEXT_PUBLIC_API_BASE_URL`) or `frontend/Dockerfile` |
 
+### Both on Vercel
+
+The API can also run as a Vercel serverless function (`backend/vercel.json` → `backend/src/vercel.ts`). There is no BullMQ worker on Vercel: agent runs go in-process and are kept alive after the `202` response with Vercel's `waitUntil`.
+
+1. **Backend project**: import the repo, set Root Directory to `backend`, and set these env vars: `NODE_ENV=production`, `MONGODB_URI` (Atlas), `REDIS_URL` (Upstash, `rediss://…`), `JWT_SECRET`, `CORS_ALLOWED_ORIGINS=https://<frontend>.vercel.app`, and the `LLM_*` vars. Atlas must allow Vercel's IPs (Network Access → `0.0.0.0/0` on the free tier).
+2. **Frontend project**: set Root Directory to `frontend` and `NEXT_PUBLIC_API_BASE_URL=https://<backend>.vercel.app` (no trailing slash).
+3. Redeploy the frontend after changing `NEXT_PUBLIC_API_BASE_URL`, because it is inlined at build time. Redeploy the backend after changing `CORS_ALLOWED_ORIGINS`.
+4. Check `https://<backend>.vercel.app/actuator/health`, which should return `{"status":"UP",…}`, then log in from the frontend.
+
 Health check: `GET /actuator/health`. Metrics: `GET /actuator/prometheus` (ADMIN token).
 
 ## Repository layout
