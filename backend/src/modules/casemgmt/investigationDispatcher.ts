@@ -29,12 +29,25 @@ export function createQueueDispatcher(runInProcess: RunInvestigation): Investiga
   };
 }
 
-/** Runs investigations in the same process without Redis (tests and single-process demos). */
-export function createInlineDispatcher(runInProcess: RunInvestigation): InvestigationDispatcher {
+/** Starts a background task after the HTTP response; serverless hosts must keep the instance alive for it. */
+export type BackgroundScheduler = (task: () => Promise<void>) => void;
+
+const scheduleWithSetImmediate: BackgroundScheduler = (task) => {
+  setImmediate(() => void task());
+};
+
+/**
+ * Runs investigations in the same process without Redis (tests, single-process demos and
+ * serverless hosts, which pass a scheduler such as Vercel's `waitUntil`).
+ */
+export function createInlineDispatcher(
+  runInProcess: RunInvestigation,
+  schedule: BackgroundScheduler = scheduleWithSetImmediate,
+): InvestigationDispatcher {
   return {
     newRunId: () => randomUUID(),
     async dispatch(job, runId) {
-      setImmediate(() => void runInProcess(job.caseId, runId));
+      schedule(() => runInProcess(job.caseId, runId));
     },
   };
 }
